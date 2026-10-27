@@ -1,0 +1,28 @@
+<!DOCTYPE html>
+<html lang="en"><head><meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Edit {{.Item.Name}}</title>
+<style>
+ body{font-family:sans-serif;margin:12px;background:#faf7f2}
+ label{display:block;margin:8px 0;font-size:1.1rem}
+ button{padding:12px 20px;font-size:1.1rem}
+ fieldset{margin:12px 0}
+</style></head><body>
+      <a href="/">&larr; Change role</a>
+<h1>{{.Item.Name}}</h1>
+<p>Section: {{.Item.Section}}</p>
+<form method="post">
+ <fieldset><legend>Status</legend>
+  <label><input type="radio" name="status" value="unknown" {{if eq .Item.Mode "unknown"}}checked{{end}}> Not checked yet</label>
+  <label><input type="radio" name="status" value="none" {{if eq .Item.Mode "none"}}checked{{end}}> Contains no allergens</label>
+  <label><input type="radio" name="status" value="has" {{if eq .Item.Mode "has"}}checked{{end}}> Contains these:</label>
+ </fieldset>
+ <fieldset><legend>Allergens</legend>
+ {{range .Allergens}}
+  <label><input type="checkbox" name="codes" value="{{.Code}}" {{if .Checked}}checked{{end}}> {{.Code}} - {{.Name}}</label>
+ {{end}}
+ </fieldset>
+ <label><input type="checkbox" name="vege" {{if .Item.Vege}}checked{{end}}> Vegetarian / vegan</label>
+ <button type="submit">Save</button> <a href="/admin">Cancel</a>
+</form>
+</body></html>

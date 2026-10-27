@@ -1,0 +1,96 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Gaucho Allergens</title>
+<style>
+  :root {
+  --bg: #2C361B;
+  --card: #3A4A26;
+  --deep: #283014;
+  --cream: #EDE9CF;
+  --muted: #C9C7AE;
+  --light: #F2F5EE;
+  --cannot: #B3261E;
+  --ask: #F5C451;
+  --can: #8FD17D;
+}
+body { font-family: Georgia, "Times New Roman", serif; margin: 0; padding: 12px;
+       background: var(--bg); color: var(--cream); }
+h1 { font-size: 1.4rem; letter-spacing: .08em; text-transform: uppercase; }
+#search { width: 100%; padding: 12px; font-size: 1rem; margin: 8px 0; box-sizing: border-box;
+          background: var(--light); color: #000; border: 2px solid var(--cream); border-radius: 8px; }
+#buttons button { margin: 4px; padding: 10px 14px; font-size: 1rem; cursor: pointer;
+          background: var(--card); color: var(--cream);
+          border: 2px solid var(--cream); border-radius: 8px; }
+#buttons button.on { background: var(--cannot); color: #fff; border-color: #fff; }
+h2 { padding: 8px 12px; border-radius: 6px; font-size: 1.1rem; letter-spacing: .05em; }
+.cannot h2 { background: var(--cannot); color: #fff; }
+.unknown h2 { background: var(--ask); color: #000; }
+.can h2 { background: var(--can); color: #000; }
+h3 { margin: 12px 0 2px; color: var(--muted); text-transform: uppercase; font-size: .9rem; }
+ul { margin: 0; padding-left: 20px; background: var(--card); border-radius: 6px; padding: 8px 8px 8px 28px; }
+a { color: var(--cream); }
+</style>
+</head>
+<body>
+    <a href="/">&larr; Change role</a>
+<h1>Gaucho Allergen Check</h1>
+<input id="search" placeholder="Type code or name (e.g. ND, dairy)">
+<div id="buttons"></div>
+<div id="result"></div>
+
+<script>
+const selected = new Set();
+let all = [];
+
+async function init() {
+  all = await (await fetch('/api/allergens')).json();
+  draw();
+}
+
+function draw() {
+  const q = document.getElementById('search').value.toLowerCase();
+  const box = document.getElementById('buttons');
+  box.innerHTML = '';
+  all.filter(a => !q || a.Code.toLowerCase().includes(q) || a.Name.toLowerCase().includes(q))
+     .forEach(a => {
+       const b = document.createElement('button');
+       b.textContent = a.Code + ' - ' + a.Name;
+       if (selected.has(a.Code)) b.className = 'on';
+       b.onclick = () => { selected.has(a.Code) ? selected.delete(a.Code) : selected.add(a.Code); draw(); check(); };
+       box.appendChild(b);
+     });
+}
+
+function section(title, cls, groups, note) {
+  const names = Object.keys(groups);
+  let html = '<div class="' + cls + '"><h2>' + title + '</h2>' + (note ? '<p>' + note + '</p>' : '');
+  if (!names.length) html += '<p>None</p>';
+  names.forEach(s => {
+    html += '<h3>' + esc(s) + '</h3><ul>' +
+      groups[s].map(i => '<li>' + esc(i.name) + (i.vege ? ' (vege)' : '') + '</li>').join('') + '</ul>';
+  });
+  return html + '</div>';
+}
+
+function esc(t) { const d = document.createElement('div'); d.textContent = t; return d.innerHTML; }
+
+async function check() {
+  const out = document.getElementById('result');
+  if (!selected.size) { out.innerHTML = ''; return; }
+  const r = await fetch('/api/check?a=' + [...selected].join(','));
+  if (!r.ok) { out.textContent = 'Error: ' + await r.text(); return; }
+  const d = await r.json();
+  out.innerHTML =
+    section('✕ CANNOT SERVE', 'cannot', d.cannot || {}) +
+    section('? ASK THE KITCHEN', 'unknown', d.unknown || {}, 'Allergens not checked yet.') +
+    section('✓ CAN SERVE', 'can', d.can || {});
+}
+
+document.getElementById('search').addEventListener('input', draw);
+init();
+</script>
+</body>
+</html>

@@ -1,0 +1,28 @@
+<!DOCTYPE html>
+<html lang="en"><head><meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Chef Admin</title>
+<style>
+ body{font-family:sans-serif;margin:12px;background:#faf7f2}
+ h2{background:#333;color:#fff;padding:6px 10px;border-radius:6px}
+ table{width:100%;border-collapse:collapse}
+ td{padding:6px;border-bottom:1px solid #ddd}
+ .unknown{color:#d68910;font-weight:bold}
+ .none{color:#1e8449}
+ .has{color:#c0392b}
+</style></head><body>
+      <a href="/">&larr; Change role</a>
+<h1>Chef Admin</h1>
+{{range .}}
+<h2>{{.Section}}</h2>
+<table>
+{{range .Items}}
+ <tr>
+  <td>{{.Name}}{{if .Vege}} (vege){{end}}</td>
+  <td class="{{.Mode}}">{{.Summary}}</td>
+  <td><a href="/admin/items/{{.ID}}">Edit</a></td>
+ </tr>
+{{end}}
+</table>
+{{end}}
+</body></html>
